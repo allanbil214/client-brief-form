@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Brief Website Bengkel Custom</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+          body: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        },
+        colors: {
+          steel: { 50: '#f4f5f6', 100: '#e8eaec', 200: '#d3d7db', 500: '#6b747d', 900: '#14181c' },
+          amber: { brand: '#f5b301', deep: '#d99a00' },
+        },
+      },
+    },
+  };
+</script>
+<style>
+  :root { color-scheme: light; }
+  html { scroll-behavior: smooth; }
+  body { font-family: "Plus Jakarta Sans", system-ui, sans-serif; }
+
+  /* hazard stripe used in hero + progress bar */
+  .stripes {
+    background-image: repeating-linear-gradient(-45deg, #14181c 0 12px, #f5b301 12px 24px);
+  }
+  .bar-fill {
+    background-image: repeating-linear-gradient(-45deg, #f5b301 0 10px, #e0a300 10px 20px);
+    background-size: 28px 28px;
+    animation: slide 1.2s linear infinite;
+  }
+  @keyframes slide { to { background-position: 28px 0; } }
+
+  /* one orchestrated entrance for the hero */
+  .rise { opacity: 0; transform: translateY(14px); animation: rise .6s cubic-bezier(.2,.7,.2,1) forwards; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+
+  /* sections reveal once when scrolled into view */
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .5s ease, transform .5s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* section title accent grows in */
+  .sec-bar { transform-origin: top; transform: scaleY(0); transition: transform .5s .1s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in .sec-bar { transform: scaleY(1); }
+
+  /* question card */
+  .qcard { transition: border-color .2s, box-shadow .2s, transform .2s; }
+  .qcard:focus-within { border-color: #14181c; box-shadow: 4px 4px 0 #f5b301; transform: translate(-2px,-2px); }
+  .qcard.done .qnum { background: #14181c; color: #f5b301; }
+
+  /* option pills */
+  .opt {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .65rem .85rem; border: 2px solid #d3d7db; border-radius: .5rem;
+    background: #fff; cursor: pointer; user-select: none;
+    transition: border-color .15s, background-color .15s, transform .1s;
+  }
+  .opt:hover { border-color: #6b747d; }
+  .opt:active { transform: scale(.985); }
+  .opt .mark {
+    flex: none; width: 1.25rem; height: 1.25rem; border: 2px solid #6b747d; background: #fff;
+    display: grid; place-items: center; transition: background-color .15s, border-color .15s;
+  }
+  .opt.radio .mark { border-radius: 9999px; }
+  .opt.check .mark { border-radius: .3rem; }
+  .opt .mark::after {
+    content: ""; width: .55rem; height: .55rem; background: #14181c;
+    transform: scale(0); transition: transform .18s cubic-bezier(.3,1.6,.5,1);
+  }
+  .opt.radio .mark::after { border-radius: 9999px; }
+  .opt.check .mark::after { border-radius: .12rem; }
+  .opt:has(input:checked) { border-color: #14181c; background: #fff8e1; }
+  .opt:has(input:checked) .mark { border-color: #14181c; background: #f5b301; }
+  .opt:has(input:checked) .mark::after { transform: scale(1); }
+  .opt:has(input:focus-visible) { outline: 3px solid #f5b301; outline-offset: 2px; }
+
+  .field {
+    width: 100%; background: #fff; border: 2px solid #d3d7db; border-radius: .5rem;
+    padding: .7rem .9rem; transition: border-color .15s, box-shadow .15s;
+  }
+  .field:focus { outline: none; border-color: #14181c; box-shadow: 0 0 0 4px rgba(245,179,1,.35); }
+  .other-in { animation: drop .2s ease-out; }
+  @keyframes drop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+  button:focus-visible { outline: 3px solid #f5b301; outline-offset: 3px; }
+
+  /* success check draws itself */
+  .check-path { stroke-dasharray: 40; stroke-dashoffset: 40; animation: draw .6s .25s ease-out forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .pop { animation: pop .45s cubic-bezier(.3,1.5,.5,1) both; }
+  @keyframes pop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+
+  .spin { animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+    .rise, .reveal { opacity: 1; transform: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body class="bg-steel-50 text-steel-900 antialiased">
+
+<!-- Hero -->
+<header class="relative overflow-hidden bg-steel-900 text-white">
+  <div class="stripes h-3 w-full"></div>
+  <div class="mx-auto max-w-3xl px-5 pt-12 pb-14">
+    <p class="rise font-display text-base font-semibold tracking-wide text-amber-brand" style="animation-delay:.05s">Brief website</p>
+    <h1 class="rise font-display text-4xl sm:text-6xl font-extrabold leading-[1.05] tracking-tight mt-2" style="animation-delay:.15s">
+      Ceritakan bengkelmu,<br>kami bangun webnya.
+    </h1>
+    <p class="rise mt-5 max-w-xl text-steel-200 text-lg" style="animation-delay:.3s">
+      Isi sebisanya, tidak semua wajib dijawab. Kalau belum tahu, tulis "belum tahu" saja. Jawaban tersimpan otomatis di browser, jadi boleh ditutup dan dilanjutkan nanti.
+    </p>
+  </div>
+</header>
+
+<!-- Progress -->
+<div class="sticky top-0 z-20 bg-steel-50/95 backdrop-blur border-b-2 border-steel-900">
+  <div class="mx-auto max-w-3xl px-5 py-3">
+    <div class="flex items-baseline justify-between text-sm font-medium">
+      <span id="progressText">0 dari 0 terjawab</span>
+      <span id="savedAt" class="text-steel-500"></span>
+    </div>
+    <div class="mt-2 h-3 w-full rounded-full bg-steel-200 overflow-hidden border border-steel-900">
+      <div id="progressBar" class="bar-fill h-full rounded-full transition-[width] duration-500 ease-out" style="width:0"></div>
+    </div>
+  </div>
+</div>
+
+<main class="mx-auto max-w-3xl px-5 pt-10 pb-28">
+  <form id="form" novalidate class="space-y-14"></form>
+
+  <div id="actions" class="mt-14 flex flex-wrap items-center gap-3">
+    <button type="button" id="submitBtn"
+      class="group inline-flex items-center gap-3 rounded-lg bg-steel-900 px-7 py-4 font-display text-lg font-bold text-amber-brand shadow-[4px_4px_0_#f5b301] transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#f5b301] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[2px_2px_0_#f5b301] disabled:opacity-70 disabled:cursor-wait">
+      <svg id="spinner" class="spin hidden h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 3a9 9 0 1 0 9 9" stroke-linecap="round"/></svg>
+      <span id="submitLabel">Kirim jawaban</span>
+    </button>
+    <button type="button" id="resetBtn"
+      class="rounded-lg border-2 border-steel-200 px-5 py-3.5 font-medium text-steel-500 transition hover:border-steel-900 hover:text-steel-900">
+      Kosongkan form
+    </button>
+  </div>
+  <p id="status" role="status" aria-live="polite" class="mt-4 font-medium"></p>
+
+  <!-- Success panel -->
+  <section id="success" class="hidden pop rounded-2xl border-2 border-steel-900 bg-white p-10 text-center shadow-[6px_6px_0_#f5b301]">
+    <svg class="mx-auto h-20 w-20" viewBox="0 0 48 48" fill="none">
+      <circle cx="24" cy="24" r="21" fill="#f5b301" stroke="#14181c" stroke-width="3"/>
+      <path class="check-path" d="M14 25l7 7 14-15" stroke="#14181c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <h2 class="mt-5 font-display text-3xl font-extrabold tracking-tight">Terkirim. Terima kasih!</h2>
+    <p class="mt-2 text-steel-500">Jawabanmu sudah kami terima. Kami akan menghubungi lewat kontak yang kamu berikan.</p>
+  </section>
+</main>
+
+<script>
+/* ---------- Questions ---------- */
+const SECTIONS = [
+  { title: "Tentang bengkel & tujuan website", qs: [
+    { id: "brand_name", type: "text", label: "Nama bengkel/brand apa?" },
+    { id: "brand_assets", type: "single", label: "Sudah punya logo, warna brand, atau tagline?",
+      options: ["Sudah lengkap", "Baru punya sebagian", "Belum punya"] },
+    { id: "location", type: "text", label: "Bengkel ada di kota mana? Ada berapa cabang?" },
+    { id: "specialty", type: "multi", label: "Spesialisasi bengkelnya apa?",
+      options: ["Chopper", "Bobber", "Cafe racer", "Restorasi", "Modifikasi umum"], other: true },
+    { id: "main_goal", type: "single", label: "Tujuan utama website ini apa?",
+      options: ["Pamer hasil karya / portofolio", "Cari customer baru", "Jualan produk online", "Semuanya"] },
+    { id: "target_customer", type: "multi", label: "Target customer siapa?",
+      options: ["Anak muda", "Kolektor", "Komunitas motor", "Umum"], other: true },
+  ]},
+  { title: "Menu & fitur (acuan Harley-Davidson)", qs: [
+    { id: "menu_scope", type: "single", label: "Mau selengkap Harley (Motor, Komponen, Baju/Aksesoris, About) atau versi simpel dulu?",
+      options: ["Selengkap Harley", "Simpel dulu, bisa ditambah nanti", "Belum tahu"] },
+    { id: "bike_page", type: "single", label: "Halaman Motor isinya apa?",
+      options: ["Galeri hasil custom (portofolio)", "Motor yang dijual", "Dua-duanya"] },
+    { id: "shop_mode", type: "single", label: "Komponen/aksesoris/baju mau dijual bagaimana?",
+      options: ["Bisa dibeli online (keranjang + pembayaran)", "Katalog saja, order via WhatsApp", "Tidak jualan"] },
+    { id: "item_count", type: "text", label: "Perkiraan jumlah motor dan produk yang ditampilkan di awal?" },
+    { id: "booking", type: "single", label: "Perlu fitur booking/konsultasi custom (form request, jadwal, estimasi biaya)?",
+      options: ["Perlu", "Tidak perlu", "Belum tahu"] },
+    { id: "blog_event", type: "single", label: "Perlu blog/berita/event (misalnya acara komunitas)?",
+      options: ["Perlu", "Tidak perlu", "Belum tahu"] },
+    { id: "customer_login", type: "single", label: "Perlu login akun customer?",
+      options: ["Perlu", "Tidak perlu", "Belum tahu"] },
+    { id: "language", type: "single", label: "Bahasa website?",
+      options: ["Indonesia saja", "Indonesia + Inggris", "Inggris saja"] },
+  ]},
+  { title: "Konten & materi", qs: [
+    { id: "media_ready", type: "single", label: "Foto dan video motor sudah ada?",
+      options: ["Sudah, kualitas bagus (resolusi tinggi)", "Ada tapi kualitas kurang", "Belum ada / perlu foto ulang"] },
+    { id: "copywriting", type: "single", label: "Siapa yang menyiapkan teks (deskripsi, profil bengkel, cerita)?",
+      options: ["Klien kirim sendiri", "Dibantu oleh kami", "Belum tahu"] },
+    { id: "socials", type: "long", label: "Link Instagram/TikTok/YouTube yang mau ditampilkan?", hint: "Tulis link atau username, satu per baris." },
+    { id: "testimonials", type: "single", label: "Ada testimoni customer yang bisa ditampilkan?",
+      options: ["Ada", "Belum ada"] },
+  ]},
+  { title: "Desain", qs: [
+    { id: "other_refs", type: "long", label: "Selain Harley, ada website lain yang disukai? Apa yang disuka dari Harley?",
+      hint: "Contoh: gelap dan sangar, foto besar, animasi, dll. Tempel link kalau ada." },
+    { id: "avoid", type: "long", label: "Ada hal yang tidak disuka atau mau dihindari?" },
+    { id: "style", type: "single", label: "Gaya tampilan yang diinginkan?",
+      options: ["Gelap / maskulin", "Vintage", "Modern minimalis"], other: true },
+  ]},
+  { title: "Teknis", qs: [
+    { id: "domain_hosting", type: "single", label: "Sudah punya domain (misal namabengkel.com) dan hosting?",
+      options: ["Sudah punya keduanya", "Baru punya domain", "Belum punya, tolong diurus", "Belum tahu"] },
+    { id: "business_email", type: "single", label: "Perlu email bisnis dengan domain sendiri?",
+      options: ["Perlu", "Tidak perlu"] },
+    { id: "editable", type: "single", label: "Setelah jadi, bagaimana update konten?",
+      options: ["Mau edit sendiri lewat dashboard admin", "Cukup kami yang update"] },
+    { id: "integrations", type: "multi", label: "Perlu integrasi apa?",
+      options: ["Tombol WhatsApp", "Google Maps", "Google Analytics"] },
+    { id: "seo", type: "single", label: "Perlu SEO dasar supaya muncul di Google (misal \"bengkel custom motor [kota]\")?",
+      options: ["Perlu", "Tidak perlu", "Belum tahu"] },
+  ]},
+  { title: "Pembayaran online (isi kalau jualan)", qs: [
+    { id: "payment_methods", type: "multi", label: "Metode pembayaran yang diinginkan?",
+      options: ["Transfer bank", "E-wallet", "Kartu kredit/debit", "COD"] },
+    { id: "shipping", type: "single", label: "Pengiriman bagaimana?",
+      options: ["Hitung ongkir otomatis", "Ongkir diinfokan manual", "Ambil di tempat saja"] },
+  ]},
+  { title: "Budget, timeline & kerja sama", qs: [
+    { id: "budget", type: "text", label: "Budget yang disiapkan kira-kira berapa?",
+      hint: "Fitur toko online jauh lebih mahal daripada website portofolio biasa." },
+    { id: "deadline", type: "text", label: "Kapan website ditargetkan selesai? Ada deadline khusus (launching/event)?" },
+    { id: "decision_maker", type: "text", label: "Siapa pengambil keputusan dan kontak utamanya?",
+      hint: "Tulis nama dan nomor WhatsApp." },
+    { id: "revisions", type: "text", label: "Berapa kali revisi yang diharapkan? Mau ada perawatan/maintenance bulanan?" },
+    { id: "payment_terms", type: "single", label: "Mau pembayaran bertahap (DP dulu)?",
+      options: ["Ya, bertahap", "Bayar penuh di akhir", "Belum tahu"] },
+    { id: "notes", type: "long", label: "Ada hal lain yang perlu kami tahu?" },
+  ]},
+];
+
+const STORAGE_KEY = "briefing-form-draft-v2";
+const form = document.getElementById("form");
+const statusEl = document.getElementById("status");
+const esc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+/* ---------- Build form ---------- */
+let n = 0;
+const allQs = [];
+SECTIONS.forEach((s) => {
+  const sec = document.createElement("fieldset");
+  sec.className = "reveal";
+  sec.innerHTML = `
+    <legend class="mb-5 flex items-stretch gap-3 p-0">
+      <span class="sec-bar block w-2 rounded-full bg-amber-brand"></span>
+      <span class="font-display text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight">${esc(s.title)}</span>
+    </legend>
+    <div class="space-y-4"></div>`;
+  const list = sec.querySelector(".space-y-4");
+
+  s.qs.forEach((q) => {
+    n++;
+    allQs.push(q);
+    const labelId = "lbl_" + q.id;
+    const card = document.createElement("div");
+    card.className = "qcard rounded-xl border-2 border-steel-200 bg-white p-5";
+    card.dataset.q = q.id;
+    card.innerHTML = `
+      <div class="mb-3 flex gap-3">
+        <span class="qnum grid h-7 min-w-7 flex-none place-items-center rounded-full bg-steel-100 px-1 font-display text-sm font-bold transition-colors">${n}</span>
+        <div>
+          <span id="${labelId}" class="block text-lg font-semibold leading-snug">${esc(q.label)}</span>
+          ${q.hint ? `<span class="mt-0.5 block text-sm text-steel-500">${esc(q.hint)}</span>` : ""}
+        </div>
+      </div>`;
+    const body = document.createElement("div");
+
+    if (q.type === "text") {
+      body.innerHTML = `<input type="text" class="field" name="${q.id}" aria-labelledby="${labelId}" autocomplete="off">`;
+    } else if (q.type === "long") {
+      body.innerHTML = `<textarea class="field min-h-[96px] resize-y" name="${q.id}" aria-labelledby="${labelId}"></textarea>`;
+    } else {
+      const kind = q.type === "single" ? "radio" : "checkbox";
+      const cls = kind === "radio" ? "radio" : "check";
+      const opts = q.options.map((o) =>
+        `<label class="opt ${cls}"><input class="sr-only" type="${kind}" name="${q.id}" value="${esc(o)}"><span class="mark"></span><span>${esc(o)}</span></label>`
+      );
+      if (q.other) {
+        opts.push(`<label class="opt ${cls}"><input class="sr-only" type="${kind}" name="${q.id}" value="__other__"><span class="mark"></span><span>Lainnya</span></label>`);
+      }
+      body.innerHTML = `<div class="grid gap-2" role="${kind === "radio" ? "radiogroup" : "group"}" aria-labelledby="${labelId}">${opts.join("")}</div>` +
+        (q.other ? `<input type="text" class="field other-in mt-3" name="${q.id}__other" placeholder="Tulis di sini kalau pilih Lainnya" hidden>` : "");
+    }
+    card.appendChild(body);
+    list.appendChild(card);
+  });
+  form.appendChild(sec);
+});
+
+/* reveal sections once when they scroll into view */
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+}, { threshold: 0.08 });
+document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+
+/* ---------- Read / write values ---------- */
+function collect() {
+  const out = {};
+  allQs.forEach((q) => {
+    if (q.type === "text" || q.type === "long") {
+      out[q.id] = form.elements[q.id].value.trim();
+    } else if (q.type === "single") {
+      const c = form.querySelector(`input[name="${q.id}"]:checked`);
+      let v = c ? c.value : "";
+      if (v === "__other__") v = "Lainnya: " + form.elements[q.id + "__other"].value.trim();
+      out[q.id] = v;
+    } else {
+      out[q.id] = [...form.querySelectorAll(`input[name="${q.id}"]:checked`)].map((c) =>
+        c.value === "__other__" ? "Lainnya: " + form.elements[q.id + "__other"].value.trim() : c.value);
+    }
+  });
+  return out;
+}
+function rawState() {
+  const s = {};
+  [...form.elements].forEach((el) => {
+    if (!el.name) return;
+    if (el.type === "radio" || el.type === "checkbox") { if (el.checked) (s[el.name] = s[el.name] || []).push(el.value); }
+    else s[el.name] = el.value;
+  });
+  return s;
+}
+function restore(s) {
+  [...form.elements].forEach((el) => {
+    if (!el.name || !(el.name in s)) return;
+    if (el.type === "radio" || el.type === "checkbox") el.checked = s[el.name].includes(el.value);
+    else el.value = s[el.name];
+  });
+}
+function syncOther() {
+  allQs.filter((q) => q.other).forEach((q) => {
+    const on = form.querySelector(`input[name="${q.id}"][value="__other__"]`).checked;
+    form.elements[q.id + "__other"].hidden = !on;
+  });
+}
+const answered = (v) => (Array.isArray(v) ? v.length > 0 : v !== "");
+
+function updateProgress() {
+  const data = collect();
+  let done = 0;
+  allQs.forEach((q) => {
+    const ok = answered(data[q.id]);
+    if (ok) done++;
+    form.querySelector(`[data-q="${q.id}"]`).classList.toggle("done", ok);
+  });
+  document.getElementById("progressText").textContent = `${done} dari ${allQs.length} terjawab`;
+  document.getElementById("progressBar").style.width = (done / allQs.length * 100) + "%";
+}
+function saveDraft() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(rawState()));
+    document.getElementById("savedAt").textContent = "Draft tersimpan";
+  } catch (e) {}
+}
+function refresh() { syncOther(); updateProgress(); saveDraft(); }
+form.addEventListener("input", refresh);
+form.addEventListener("change", refresh);
+
+try { const d = localStorage.getItem(STORAGE_KEY); if (d) restore(JSON.parse(d)); } catch (e) {}
+syncOther();
+updateProgress();
+
+/* ---------- Actions ---------- */
+function payload() {
+  return {
+    submittedAt: new Date().toISOString(),
+    answers: collect(),
+    questions: Object.fromEntries(allQs.map((q) => [q.id, q.label])),
+  };
+}
+function setStatus(msg, ok) {
+  statusEl.textContent = msg;
+  statusEl.className = "mt-4 font-medium " + (ok ? "text-green-700" : "text-red-700");
+}
+
+const submitBtn = document.getElementById("submitBtn");
+submitBtn.addEventListener("click", async () => {
+  submitBtn.disabled = true;
+  document.getElementById("spinner").classList.remove("hidden");
+  document.getElementById("submitLabel").textContent = "Mengirim";
+  setStatus("");
+  try {
+    const r = await fetch("/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload()),
+    });
+    const j = await r.json();
+    if (!r.ok || !j.ok) throw new Error(j.error || "Server error");
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    form.classList.add("hidden");
+    document.getElementById("actions").classList.add("hidden");
+    statusEl.textContent = "";
+    document.getElementById("success").classList.remove("hidden");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch (e) {
+    setStatus("Gagal mengirim. Cek koneksi internet lalu coba lagi. Jawabanmu masih tersimpan di form.", false);
+    submitBtn.disabled = false;
+    document.getElementById("spinner").classList.add("hidden");
+    document.getElementById("submitLabel").textContent = "Kirim jawaban";
+  }
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (!confirm("Kosongkan semua jawaban?")) return;
+  form.reset();
+  syncOther();
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  updateProgress();
+  setStatus("");
+  document.getElementById("savedAt").textContent = "";
+});
+</script>
+</body>
+</html>
